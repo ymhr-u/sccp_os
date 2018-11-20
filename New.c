@@ -30,9 +30,8 @@ int not_enough_mem;//(compactionしてもallocできない場合の数)
 int n_compaction; //(何回compactionしたか？)
 int total_move_mem; //(compactionで移動させたメモリーサイズの積算)
 int over_size; //空き以上に割り当ててしまった回数
-int total_hole_size = MEMSIZE;
+int total_hole_size = MEMSIZE; //空き領域の合計サイズ
 int dflag; //デバッグ用変数
-int bflag; 
 
 void allocate(int);
 void print_list();
