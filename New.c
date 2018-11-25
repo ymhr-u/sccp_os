@@ -5,8 +5,8 @@
 #define MEMSIZE 64
 
 /*
-  it is assumed that the unit of memory allocation is 1KB 
-  and the total memory size is 64KB. 
+  it is assumed that the unit of memory allocation is 1KB
+  and the total memory size is 64KB.
 */
 
 typedef struct node {
@@ -14,7 +14,7 @@ typedef struct node {
   int begin; /* beginning address (in allocation unit: 1KB) */
   int size; /* segment size (in allocation unit) */
   struct node *prev, *next;
-} node; 
+} node;
 
 
 node *head;    /* pointers to the first node  in the linked list */
@@ -30,8 +30,9 @@ int not_enough_mem;//(compactionしてもallocできない場合の数)
 int n_compaction; //(何回compactionしたか？)
 int total_move_mem; //(compactionで移動させたメモリーサイズの積算)
 int over_size; //空き以上に割り当ててしまった回数
-int total_hole_size = MEMSIZE; //空き領域の合計サイズ
+int total_hole_size = MEMSIZE;
 int dflag; //デバッグ用変数
+int bflag;
 
 void allocate(int);
 void print_list();
@@ -43,28 +44,28 @@ node *bestfit(int);
 node *firstfit(int);
 
 int main(int argc, char **argv){
-  
+
   if((argc >1) && (strcmp(argv[1], "-d") == 0)){dflag = 1;}
-  if((argc >1) && (strcmp(argv[1], "-b") == 0)){bflag = 1;}  
+  if((argc >1) && (strcmp(argv[1], "-b") == 0)){bflag = 1;}
 
   int  a;
   char c;
   char line[80], cmd[80];
-  segno = 0; 
-  
+  segno = 0;
+
   head = (node *)malloc(sizeof(node));
   head->next = NULL;
   head->prev = NULL;
   head->size = MEMSIZE;
   head->begin= 0;
   head->segment = -1;
-  
- 
+
+
   //  while(scanf(" %c",&c) != EOF){
-  while(fgets(line, STRMAX, stdin) != NULL){    
-    if(sscanf(line, "%s %d", cmd,&a) > 0){          
+  while(fgets(line, STRMAX, stdin) != NULL){
+    if(sscanf(line, "%s %d", cmd,&a) > 0){
       switch(cmd[0]){
-	
+
       case 'a':
 	if(bflag){
 	  printf("allocate %dKB (best fit)\n",a);
@@ -77,12 +78,12 @@ int main(int argc, char **argv){
 	else{
 	  printf("allocate %dKB (first fit)\n",a);
 	  alloc_flag =0;
-	  if(a<=0){printf("allocate size error\n");}	
+	  if(a<=0){printf("allocate size error\n");}
 	  else{allocate(a);}
 	  a = -1;
 	  break;
 	}
-	
+
 	/*      case 'b':
         printf("allocate %dKB (best fit)\n",a);
 	alloc_flag = 1;
@@ -91,20 +92,20 @@ int main(int argc, char **argv){
 	a = -1;
 	break;
 	*/
-      case 'd': 
+      case 'd':
 	printf("deallocate:SegNo.%d\n",a);
       	if(a<0 || a> segno-1){printf("%d does not exist and cannot be deallocated.\n",a);}
 	else{deallocate(a);}
-	break; 
-	
-      case 'p': 
+	break;
+
+      case 'p':
 	if(!dflag){print_list();}
 	break;
 
-     case 'c':   
+     case 'c':
 	compact();
 	break;
-	
+
       default:
 	printf("Command Error:this is not a valid command.\n");
 	break;
@@ -124,7 +125,7 @@ int main(int argc, char **argv){
 
 
 void allocate(int size){
-  
+
   total_req_size+=size;
 
   struct node *new=(node *)malloc(sizeof(node));
@@ -137,44 +138,44 @@ void allocate(int size){
       return;
     }
   }
-  else{ 
-    x= firstfit(size); 
+  else{
+    x= firstfit(size);
     if(x==NULL){
       over_size++;
       return;
     }
   }
-  
+
   total_alloc_size += x->size;
   if(x->size != size){
-    if(x->next!=NULL){x->next->prev=new;}  
+    if(x->next!=NULL){x->next->prev=new;}
     new->begin = x->begin+size ;
     new->segment=-1;
     new->size=x->size-size;
     new->prev  = x;
-    new->next  = x->next; 
+    new->next  = x->next;
     x->next= new;
     x->segment  = segno++;
     x->size = size;
-    
+
   }else{
     /* request size == hole size*/
     free(new);
     x->segment = segno++;
-  }  
+  }
   print_list();
 
 }
 
 void print_list(){
   struct node *cur = head;
-  
+
   int i=0;
   printf("  ");
   while(cur!=NULL){
     if(cur->segment == -1 ){printf("H");}
     else{printf("P");}
-    
+
     printf("(");
     if(cur->segment != -1)printf("%d ",cur->segment);
     printf("%d %d) ",cur->begin,cur->size);
@@ -182,8 +183,8 @@ void print_list(){
   }
 
   printf("\n");
-  cur = head;  
-  
+  cur = head;
+
   printf("|");
   while(cur!=NULL){
     if(cur->segment == -1 ){
@@ -193,7 +194,7 @@ void print_list(){
     }
     printf("|");
     cur=cur->next;
-    
+
   }
   printf("\n");
 
@@ -216,7 +217,7 @@ void deallocate(int num_seg){
   node *tmp_hole;
   struct node *cur = head;
   n_dealloc++;
-  
+
   while(cur!=NULL){
     if(cur->segment == num_seg){
       total_hole_size+=cur->size;
@@ -237,13 +238,13 @@ void deallocate(int num_seg){
 }
 
 void merge(node *target){
-  
+
   struct node *p = head;
-  
-  while(p!=target){ 
-    p=p->next; 
+
+  while(p!=target){
+    p=p->next;
   }
- 
+
  /*head*/
   if(p == head){
     if(p->next->segment == -1){
@@ -257,12 +258,12 @@ void merge(node *target){
       p->prev->size += p->size;
       p->prev->next = p->next;
     }
-  }    
-  
+  }
+
   else{
     //case(d) : H P H
     if(p->next->segment==-1 && p->prev->segment == -1){
-      p->prev->size += p->size; 
+      p->prev->size += p->size;
       p->prev->size += p->next->size;
       if(p->next->next!=NULL){
 	p->prev->next = p->next->next;
@@ -282,7 +283,7 @@ void merge(node *target){
       }
     }
     //case(c) : H H P
-    else if(p->prev->segment == -1){      
+    else if(p->prev->segment == -1){
       p->prev->size += p->size;
       p->prev->next = p->next;
       p->next->prev = p->prev;
@@ -292,19 +293,19 @@ void merge(node *target){
   }
   return;
 }
-   
-  
+
+
 
 node *firstfit(int request){
   struct node *cur = head;
   int biggest=0;
- 
+
   if(request>total_hole_size){
     not_enough_mem++;
     printf("Can't allocate this size\n");
     return NULL;
   }
-  
+
   while(cur!=NULL){
     if(cur->segment == -1){
       total_hole_size+=cur->size;
@@ -317,29 +318,29 @@ node *firstfit(int request){
     n_traverse++;
     cur = cur->next;
   }
-  
-   
+
+
     printf("\nExecute compaction\n");
     compact();
     n_compaction++;
     printf("\nAllocate again\n");
     return firstfit(request);
-  
+
 }
 
 node *bestfit(int request){
   struct node *cur = head,*return_node;
   int biggest=0,flag=0;
- 
-  return_node=(node *)malloc(sizeof(node)); 
+
+  return_node=(node *)malloc(sizeof(node));
   return_node->size = 99999;
-  
+
   if(request>total_hole_size){
     not_enough_mem++;
     printf("Can't allocate this size\n");
     return NULL;
   }
-  
+
   while(cur!=NULL){
     if(cur->segment == -1){
       total_hole_size+=cur->size;
@@ -352,12 +353,12 @@ node *bestfit(int request){
     n_traverse++;
     cur = cur->next;
   }
-  
+
   if(flag){
     total_hole_size-=return_node->size;
     return return_node;
   }
-  
+
   printf("\nExecute compaction\n");
   compact();
   n_compaction++;
@@ -368,45 +369,43 @@ node *bestfit(int request){
 
 void compact(){
   struct node *cur = head;
-  int emp_size=0;
+  int emp_size=0,i=0,j,k;
+  int cal[100];
   int before_begin,after_begin;
   while(cur!=NULL){
     if(cur->segment == -1){
-      emp_size+=cur->size;   
-      if(cur==head){ 
-	//total_move_mem+=cur->size;
-	head=cur->next;
-      }
+      cal[i]=cur->size;
+      emp_size+=cur->size;
+      if(cur==head){head=cur->next;}
       else if(cur->next ==NULL ){cur->prev->next=NULL;}//tail
       else{
-	//before_begin=cur->next->begin;
-	//after_begin=cur->begin;
-	//total_move_mem+=(before_begin-after_begin);
 	cur->prev->next = cur->next;
 	cur->next->prev = cur->prev;
       }
+      i++;
     }
     cur = cur->next;
   }
- 
-  cur = head;
-  cur->begin = 0;
-  while(cur->next!=NULL){
-    before_begin=cur->next->begin;
-    cur->next->begin = cur->begin + cur->size;
-    total_move_mem += MEMSIZE-before_begin-(cur->next->begin);
-    cur = cur->next;
+
+  for(j=0;j<i;j++){
+    total_move_mem +=64;
+    for(k=0;k<i;k++){
+      total_move_mem -= cal[k];
+    }
   }
+
+  cur = head;
+  while(cur->next!=NULL){cur = cur->next;}
+
   cur->begin = cur->prev->begin + cur->prev->size;
 
   struct node *new=(node *)malloc(sizeof(node));
   new->prev  = cur;
-  new->next  = NULL;  
+  new->next  = NULL;
   new->begin = cur->begin + cur->size;
   new->segment=-1;
   new->size=emp_size;
- 
+
   cur->next= new;
   print_list();
-} 
-
+}
